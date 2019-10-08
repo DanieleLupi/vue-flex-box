@@ -1,6 +1,6 @@
 {
   "name": "@sidline/vue-flex-box",
-  "version": "1.0.7",
+  "version": "1.0.11",
   "description": "A flexbox grid system.",
   "keywords": [
     "flex",
@@ -22,11 +22,10 @@
     "src"
   ],
   "scripts": {
-    "build-rol": "cross-env NODE_ENV=production rollup --config build/rollup.config.js",
-    "build-prod": "cross-env NODE_ENV=production rollup --config build/rollup.config.new.js",
+    "build-lib": "cross-env NODE_ENV=production rollup --config build/rollup.config.js",
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lib": "vue-cli-service build --mode production --target lib --name vue-flex-box src/main.js",
+    "build": "vue-cli-service build src/index.js",
+    "lib": "vue-cli-service build --mode production --target lib --name vue-flex-box src/index.js",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {

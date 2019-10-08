@@ -25,7 +25,9 @@ const baseConfig = {
       },
     },
     postVue: [
-      buble(),
+      buble({
+        objectAssign: 'Object.assign'
+      }),
     ],
   },
 };
