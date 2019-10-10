@@ -13,13 +13,13 @@ const Gutter = ["none", "small", "medium", "large"];
 const JustifyContent = Shared.concat(["between", "around", "evenly"]);
 
 
-function createItemStyleClass(context) {
+function createItemStyleClass(props) {
   const styles = {};
   const classes = {
     //fxItem: true,
-    fxItemFill: context.props.fxFill,
-    fxNoGrow: context.props.fxNoGrow,
-    fxNoShrink: context.props.fxNoShrink,
+    fxItemFill: props.fxFill,
+    fxNoGrow: props.fxNoGrow,
+    fxNoShrink: props.fxNoShrink,
     'fxAlign-auto': false,
     'fxAlign-start': false,
     'fxAlign-end': false,
@@ -34,29 +34,43 @@ function createItemStyleClass(context) {
     'fxGutter-column-large': false
   };
 
-  if (context.props.fxOrder) {
-    styles.order = context.props.fxOrder;
+  if (props.fxOrder) {
+    styles.order = props.fxOrder;
   }
 
-  if (isNumber(context.props.fxSize) && context.props.fxSize > 0) {
+    //calc(50% - var(--gutter-large) * 2)
+    //console.log("PARENT GUTTER", props.fxParentGutter)
+
+  if (isNumber(props.fxSize) && props.fxSize > 0) {
     classes.fxNoGrow = true;
     classes.fxNoShrink = true;
-    styles["flex-basis"] = context.props.fxSize + "px";
-  } else if (isString(context.props.fxSize)) {
+    if(props.fxParentGutter === "none") {
+      styles["flex-basis"] = props.fxSize + "px";
+    } else {
+      styles["flex-basis"] = "calc(" + props.fxSize + "px" + " - var(--gutter-" + props.fxParentGutter + ") * 2)";
+    }
+  } else if (isString(props.fxSize)) {
     classes.fxNoGrow = true;
     classes.fxNoShrink = true;
-    styles["flex-basis"] = context.props.fxSize;
+    if(props.fxParentGutter === "none") {
+    styles["flex-basis"] = props.fxSize;
+    } else {
+      styles["flex-basis"] = "calc(" + props.fxSize + " - var(--gutter-" + props.fxParentGutter + ") * 2)";
+    }
   }
 
-  if (context.props.fxAlign != 'none') {
-    classes['fxAlign-' + context.props.fxAlign] = context.props.fxAlign;
+  if (props.fxAlign != 'none') {
+    classes['fxAlign-' + props.fxAlign] = props.fxAlign;
   }
 
+  if (props.fxParentGutter != 'none') {
+    classes['fxGutter-' + props.fxParentDirection + "-" + props.fxParentGutter] = true;
+  }
 
   return { styles, classes }
 }
 
-function createContainerStyleClass(context) {
+function createContainerStyleClass(props) {
   const styles = {};
   const classes = {
     fxItem: true,
@@ -91,12 +105,12 @@ function createContainerStyleClass(context) {
     'fxAlignContent-baseline': false
   };
 
-  if (context.props.fxWrap) {
+  if (props.fxWrap) {
     classes.fxWrap = true;
     classes.fxNoWrap = false;
     classes.fxWrapReverse = false;
   }
-  else if (context.props.fxWrapReverse) {
+  else if (props.fxWrapReverse) {
     classes.fxWrap = false;
     classes.fxNoWrap = false;
     classes.fxWrapReverse = true;
@@ -107,24 +121,24 @@ function createContainerStyleClass(context) {
     classes.fxWrapReverse = false;
   }
 
-  if (context.props.fxDirection == "column") {
+  if (props.fxDirection == "column") {
     classes.fxColumn = true;
     classes.fxRow = false;
     classes.fxRowReverse = false;
     classes.fxColumnReverse = false;
   }
 
-  if (context.props.fxDirection == "row") {
+  if (props.fxDirection == "row") {
     classes.fxColumn = false;
     classes.fxRow = true;
     classes.fxRowReverse = false;
     classes.fxColumnReverse = false;
   }
 
-  if (context.props.fxReverse) {
+  if (props.fxReverse) {
     classes.fxColumn = false;
     classes.fxRow = false;
-    classes['fxReverse-' + context.props.fxDirection] = true;  
+    classes['fxReverse-' + props.fxDirection] = true;  
 
     // if (context.props.column) {
     //   classes.fxRowReverse = false;
@@ -135,9 +149,9 @@ function createContainerStyleClass(context) {
     // }
   }
 
-  classes['fxJustify-' + context.props.fxJustify] = true;
-  classes['fxAlignItems-' + context.props.fxAlignItems] = true;
-  classes['fxAlignContent-' + context.props.fxAlignContent] = true;
+  classes['fxJustify-' + props.fxJustify] = true;
+  classes['fxAlignItems-' + props.fxAlignItems] = true;
+  classes['fxAlignContent-' + props.fxAlignContent] = true;
 
   return { styles, classes }
 }
@@ -147,7 +161,7 @@ function createContainerStyleClass(context) {
 export default {
   name: 'fx-item',
   // extends: Item,
-  functional: true,
+  functional: false,
   props: {
     tag: { default: 'div', type: String },
 
@@ -161,6 +175,8 @@ export default {
     fxAlignItems: { default: 'stretch', type: String, validator: type => AlignItems.indexOf(type) !== -1 },
     fxAlignContent: { default: 'stretch', type: String, validator: type => AlignContent.indexOf(type) !== -1 },
     fxGutter: { default: "none", type: String, validator: type => Gutter.indexOf(type) !== -1 },
+    fxParentGutter: { default: "none", type: String, validator: type => Gutter.indexOf(type) !== -1 },
+    fxParentDirection: { default: "none", type: String, validator: type => Direction.indexOf(type) !== -1 },
 
     // Flex Item Properies
     fxOrder: { default: 0, type: Number },
@@ -170,29 +186,25 @@ export default {
     fxNoGrow: { default: false, type: Boolean },
     fxAlign: { default: 'none', type: String, validator: type => AlignSelf.indexOf(type) !== -1 },
   },
-  render(createElement, context) {
-    //calc(50% - var(--gutter-large) * 2)
-    //console.log("GUTTER", context.props.tag, context.data["fxColumnReverse"]);
+  render(createElement) {
+    const context = this;
+    const container = createContainerStyleClass(context.$props);
+    const item = createItemStyleClass(context.$props);
 
-    const container = createContainerStyleClass(context);
-    const item = createItemStyleClass(context);
+    const myprops = {}
 
-    //var combined = Object.assign(parent.classes, classes);
-    //console.log(combined);
-
-    context.data.props = { ...context.props }
-    context.data.style = { ...context.data.style, ...container.styles, ...item.styles };
-    context.data.class = { ...context.data.class, ...container.classes, ...item.classes };
+    myprops.style = { ...container.styles, ...item.styles };
+    myprops.class = { ...container.classes, ...item.classes };
 
     //context.data.style = styles;
     //context.data.class = classes;
 
-    if (context.props.fxGutter != "none") {
-      if(context.children != undefined) {
-        context.children.forEach(element => {
-          const className = "fxGutter-" + context.props.fxDirection + "-" + context.props.fxGutter;
-          if(element.data != undefined &&  element.data.class != undefined) {
-            element.data.class[className] = true;
+    if (context.$props.fxGutter != "none") {
+      if(context.$slots.default != undefined) {
+        context.$slots.default.forEach(element => {
+          if(element.componentOptions != undefined && element.componentOptions.propsData != undefined) {
+            element.componentOptions.propsData.fxParentGutter = context.$props.fxGutter;
+            element.componentOptions.propsData.fxParentDirection = context.$props.fxDirection;
           }
         });
       }
@@ -207,6 +219,9 @@ export default {
 
     // //console.log("GUTTER2", context.props.tag, context.data.class);
 
-    return createElement(context.props.tag, context.data, context.children);
+    return createElement(context.$props.tag, { 
+      class: Object.assign({}, myprops.class),
+      style: Object.assign({}, myprops.style) 
+    }, context.$slots.default);
   }
 }
